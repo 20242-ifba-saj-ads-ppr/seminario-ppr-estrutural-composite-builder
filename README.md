@@ -95,6 +95,7 @@ Departamento "1" o-- "*" Componente : contém
 ```
 
 ### Estrutura 
+![image](https://github.com/user-attachments/assets/ec38de12-e8c7-48f8-bdc0-b4e39c72f3fc)
 
 
 ### Participantes
