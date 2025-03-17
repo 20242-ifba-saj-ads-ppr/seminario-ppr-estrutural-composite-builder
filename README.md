@@ -1,224 +1,207 @@
 # Composite
 
 ## Motivação
-Imagine que uma empresa deseja organizar e exibir a estrutura hierárquica de sua organização, que inclui departamentos e funcionários. Atualmente, os dados são armazenados de forma separada (listas de funcionários e departamentos independentes) e não há uma maneira simples e uniforme de exibir essa hierarquia.
+Imagine um sistema de gestão de tarefas/projetos que precisa lidar com diferentes tipos de tarefas: algumas são simples, outras têm prazos específicos, e outras são consideradas prioritárias. Todas devem ser tratadas de forma uniforme (por exemplo, exibidas e organizadas na mesma árvore de projeto), sem que o código cliente precise distinguir manualmente cada tipo de tarefa.
 
-#### Problema:
-
-Fragmentação dos dados: Cada departamento possui sua própria lista de funcionários e, em alguns casos, também pode conter subdepartamentos. Sem uma estrutura unificada, a exibição e manutenção dos dados se torna complexa.
-Dificuldade na exibição hierárquica: Para exibir a estrutura completa da empresa, seria necessário iterar manualmente por cada nível hierárquico e combinar informações de diferentes fontes.
-Manutenção custosa: Qualquer modificação na estrutura hierárquica ou na forma de exibir os dados demandaria a alteração de diversas partes do código.
-
-  
-```plantuml
-@startuml
-title Cenário Problema - Dados Fragmentados
-
-package "Empresa" {
-  class "Departamento TI" {
-    - nome: String
-    - sigla: String
-    - descrição: String
-    --
-    + listarFuncionarios(): void
-  }
-
-  class "Departamento Design" {
-    - nome: String
-    - sigla: String
-    - descrição: String
-    --
-    + listarFuncionarios(): void
-  }
-
-  class "Funcionario" {
-    - nome: String
-    - cargo: String
-    - salario: double
-    - dataAdmissao: String
-    --
-    + exibirDetalhe(): void
-  }
-}
-
-"Departamento TI" --> "Funcionario" : possui
-"Departamento Design" --> "Funcionario" : possui
-
-@enduml
-```
-
-
-#### Como o Composite Resolve o Problema:
-
-Utilizando o padrão Composite, cria-se uma estrutura hierárquica onde tanto departamentos (composite) quanto funcionários (leaf) implementam a mesma interface (no exemplo, Componente com o método exibirDetalhe()). Dessa forma, a exibição da estrutura completa é feita de maneira recursiva e uniforme, simplificando a manutenção e a escalabilidade do sistema.
-
-
-```plantuml
-@startuml
-title Solução com Composite
-
-interface Componente {
-  +exibirDetalhe()
-}
-
-class Funcionario {
-  - nome: String
-  - cargo: String
-  - salario: double
-  - dataAdmissao: String
-  --
-  +exibirDetalhe()
-}
-
-class Departamento {
-  - nome: String
-  - sigla: String
-  - descricao: String
-  - componentes: List<Componente>
-  --
-  +adicionar(Componente): void
-  +exibirDetalhe(): void
-}
-
-class CompositeDemo {
-  +main(args: String[]): void
-}
-
-Componente <|.. Funcionario
-Componente <|.. Departamento
-CompositeDemo --> Departamento : monta estrutura
-
-Departamento "1" o-- "*" Componente : contém
-
-@enduml
-
-```
-
-### Estrutura 
-![image](https://github.com/user-attachments/assets/ec38de12-e8c7-48f8-bdc0-b4e39c72f3fc)
-
-
-### Participantes
-
-- **Component (Componente)**
-  -  declara a interface para os objetos na composição;
-  -  implementa comportamento-padrão para a interface comum a todas as
-classes, conforme apropriado;
-  -  declara uma interface para acessar e gerenciar os seus componentes-filhos;
-  -  (opcional) define uma interface para acessar o pai de um componente na
-estrutura recursiva e a implementa, se isso for apropriado.
-- **Leaf (Funcionário)**
-  - representa objetos-folha na composição. Uma folha não tem filhos;
-  - define comportamento para objetos primitivos na composição.
-- **Composite (Departamento)**
-  - define comportamento para componentes que têm filhos;
-  - armazena os componentes-filho;
-  - implementa as operações relacionadas com os filhos presentes na interface de Component.
-- **Client (CompositeDemo)**
-  - manipula objetos na composição através da interface de Component.
-
-### Exemplo: 
-
-####  Interface Componente - Component
+O padrão Composite permite agrupar tanto tarefas simples (folhas) quanto subprojetos (composite) em uma mesma hierarquia. Além disso, ao introduzir várias classes de folhas (cada uma com comportamentos/atributos distintos), ainda assim conseguimos manter o mesmo método de exibição (exibirTarefa) para todo mundo, graças à interface comum.
 
 ```java
-public interface Componente {
-    void exibirDetalhe();
+@startuml
+title Estrutura Expandida com Várias Folhas
+
+interface Tarefa {
+  + exibirTarefa(nivel: int)
+}
+
+class TarefaSimples {
+  - nome: String
+  --
+  + exibirTarefa(nivel: int)
+}
+
+class TarefaComPrazo {
+  - nome: String
+  - prazo: LocalDate
+  --
+  + exibirTarefa(nivel: int)
+}
+
+class TarefaPrioritaria {
+  - nome: String
+  - prioridade: int
+  --
+  + exibirTarefa(nivel: int)
+}
+
+class Projeto {
+  - nome: String
+  - tarefas: List<Tarefa>
+  --
+  + adicionarTarefa(Tarefa): void
+  + exibirTarefa(nivel: int): void
+}
+
+Tarefa <|.. TarefaSimples
+Tarefa <|.. TarefaComPrazo
+Tarefa <|.. TarefaPrioritaria
+Tarefa <|.. Projeto
+@enduml
+```
+
+### Tarefa (Component)
+- Declara a operação comum exibirTarefa(nivel: int) que todos os tipos de tarefa (folhas e composite) devem implementar.
+
+### TarefaSimples, TarefaComPrazo, TarefaPrioritaria (Leaf)
+- Diferentes tipos de tarefas sem filhos, cada qual com atributos e comportamentos específicos.
+
+### TarefaSimples: apenas um nome.
+### TarefaComPrazo: nome + data limite (LocalDate).
+### TarefaPrioritaria: nome + nível de prioridade (inteiro).
+
+### Projeto (Composite)
+- Representa um agrupamento de tarefas (podendo ser simples ou outros projetos).
+
+Mantém uma lista de Tarefa.
+Implementa exibirTarefa(nivel: int) de forma a chamar o método de cada filho recursivamente.
+
+
+## Implementação em Java
+```java
+Interface Tarefa (Component)
+
+public interface Tarefa {
+    // Exibe as informações da tarefa, usando "nivel" para indentação
+    void exibirTarefa(int nivel);
 }
 ```
 
-####  Funcionario - Leaf
-```java 
 
-public class Funcionario implements Componente {
-    String nome;
-    String cargo;
-    double salario;
-    String dataAdmissao;
+```java
+Classes de Folha
+1) TarefaSimples
 
-    public Funcionario(String nome, String cargo, double salario, String dataAdmissao) {
+public class TarefaSimples implements Tarefa {
+    private String nome;
+
+    public TarefaSimples(String nome) {
         this.nome = nome;
-        this.cargo = cargo;
-        this.salario = salario;
-        this.dataAdmissao = dataAdmissao;
     }
 
     @Override
-    public void exibirDetalhe() {
-        System.out.printf("Nome: %s, Cargo: %s, Salário: %.2f, Data de Admissão: %s\n", 
-                        nome, cargo, salario, dataAdmissao);
+    public void exibirTarefa(int nivel) {
+        String indent = " ".repeat(nivel * 2);
+        System.out.println(indent + "- " + nome + " (Tarefa Simples)");
     }
-
-    
 }
 ```
 
-####  Classe Departamento - Composite
 ```java
+2) TarefaComPrazo
+
+import java.time.LocalDate;
+
+public class TarefaComPrazo implements Tarefa {
+    private String nome;
+    private LocalDate prazo;
+
+    public TarefaComPrazo(String nome, LocalDate prazo) {
+        this.nome = nome;
+        this.prazo = prazo;
+    }
+
+    @Override
+    public void exibirTarefa(int nivel) {
+        String indent = " ".repeat(nivel * 2);
+        System.out.println(indent + "- " + nome 
+                           + " (Tarefa com Prazo: " + prazo + ")");
+    }
+}
+```
+
+```java
+3) TarefaPrioritaria
+
+public class TarefaPrioritaria implements Tarefa {
+    private String nome;
+    private int prioridade; // 1 = mais alta, 2 = média, etc.
+
+    public TarefaPrioritaria(String nome, int prioridade) {
+        this.nome = nome;
+        this.prioridade = prioridade;
+    }
+
+    @Override
+    public void exibirTarefa(int nivel) {
+        String indent = " ".repeat(nivel * 2);
+        System.out.println(indent + "- " + nome 
+                           + " (Tarefa Prioritária: " + prioridade + ")");
+    }
+}
+```
+
+```java
+Classe Projeto (Composite)
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class Departamento implements Componente {
-    String nome;
-    String sigla;
-    String descricao;
-    private List<Componente> componentes = new ArrayList<>();
+public class Projeto implements Tarefa {
+    private String nome;
+    private List<Tarefa> tarefas;
 
-    public Departamento(String nome, String sigla, String descricao) {
+    public Projeto(String nome) {
         this.nome = nome;
-        this.sigla = sigla;
-        this.descricao = descricao;
+        this.tarefas = new ArrayList<>();
     }
 
-    public void adicionar(Componente componente) {
-        componentes.add(componente);
+    public void adicionarTarefa(Tarefa t) {
+        tarefas.add(t);
     }
-    
 
     @Override
-    public void exibirDetalhe() {
+    public void exibirTarefa(int nivel) {
+        String indent = " ".repeat(nivel * 2);
+        System.out.println(indent + "* " + nome + " (Projeto)");
 
-        System.out.println("Departamento: " + nome);
-        System.out.println("Sigla: " + sigla);
-        System.out.println("Descrição: " + descricao);
-    
-        for (Componente componente : componentes) {
-            componente.exibirDetalhe();
+        for (Tarefa t : tarefas) {
+            t.exibirTarefa(nivel + 1);
         }
     }
-    
 }
-
 ```
 
-#### Classe CompositeDemo - Client 
-
 ```java
-public class CompositeDemo {
+Classe de Demonstração (Client)
+import java.time.LocalDate;
+
+public class TarefaCompositeDemo {
     public static void main(String[] args) {
-        // Cria alguns funcionários (folhas)
-        Funcionario func1 = new Funcionario("Ana", "Analista de Sistemas",1500, "01/01/2010");
-        Funcionario func2 = new Funcionario("Bruno", "Desenvolvedor", 3500, "01/01/2015");
-        Funcionario func3 = new Funcionario("Carlos", "Designer", 2000, "01/01/2012");
+        // Cria vários tipos de tarefas (folhas)
+        TarefaSimples ts1 = new TarefaSimples("Estudar Padrão Composite");
+        TarefaComPrazo tc1 = new TarefaComPrazo("Entregar relatório", LocalDate.of(2025, 4, 10));
+        TarefaPrioritaria tp1 = new TarefaPrioritaria("Corrigir bugs críticos", 1);
 
-        // Cria um departamento de TI e adiciona funcionários
-        Departamento deptTI = new Departamento("Tecnologia Da Informação", "TI", "Departamento de TI");
-        deptTI.adicionar(func1);
-        deptTI.adicionar(func2);
+        TarefaSimples ts2 = new TarefaSimples("Ler documentação");
+        TarefaComPrazo tc2 = new TarefaComPrazo("Enviar e-mail para equipe", LocalDate.of(2025, 4, 15));
+        TarefaPrioritaria tp2 = new TarefaPrioritaria("Atualizar servidor de produção", 2);
 
-        // Cria um departamento de Design e adiciona um funcionário
-        Departamento deptDesign = new Departamento("Comunicação Visual", "CV", "Departamento de Design");
-        deptDesign.adicionar(func3);
+        // Cria um subprojeto que agrupa algumas tarefas
+        Projeto subProjeto = new Projeto("Subprojeto de Infraestrutura");
+        subProjeto.adicionarTarefa(tp1);
+        subProjeto.adicionarTarefa(ts2);
 
-        // Cria um departamento principal que agrupa os subdepartamentos
-        Departamento empresa = new Departamento("Empresa Falsa","EF", "Empresa não existente" );
-        empresa.adicionar(deptTI);
-        empresa.adicionar(deptDesign);
+        // Cria o projeto principal que agrupa tudo
+        Projeto projetoPrincipal = new Projeto("Projeto Principal");
+        projetoPrincipal.adicionarTarefa(ts1);
+        projetoPrincipal.adicionarTarefa(tc1);
+        projetoPrincipal.adicionarTarefa(subProjeto);
+        projetoPrincipal.adicionarTarefa(tc2);
+        projetoPrincipal.adicionarTarefa(tp2);
 
-        // Exibe a estrutura completa da empresa
-        empresa.exibirDetalhe();
+        // Exibe a estrutura completa
+        projetoPrincipal.exibirTarefa(0);
     }
 }
-
+Estrutura Hierárquica
 
 ```
