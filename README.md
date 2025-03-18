@@ -5,7 +5,7 @@ Imagine um sistema de gestão de tarefas/projetos que precisa lidar com diferent
 
 O padrão Composite permite agrupar tanto tarefas simples (folhas) quanto subprojetos (composite) em uma mesma hierarquia. Além disso, ao introduzir várias classes de folhas (cada uma com comportamentos/atributos distintos), ainda assim conseguimos manter o mesmo método de exibição (exibirTarefa) para todo mundo, graças à interface comum.
 
-```java
+```plantuml
 @startuml
 title Estrutura Expandida com Várias Folhas
 
@@ -45,6 +45,7 @@ Tarefa <|.. TarefaSimples
 Tarefa <|.. TarefaComPrazo
 Tarefa <|.. TarefaPrioritaria
 Tarefa <|.. Projeto
+Tarefa --o  Projeto
 @enduml
 ```
 
